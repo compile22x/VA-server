@@ -902,7 +902,7 @@ function send_message_toTarget(message, isbinary, target, ws, onNotFound) {
             // also this function is called when terminated a socket when a senderID kicks out an older unit with same senderID.
             // in this case m__terminated = true other wise the new senderID will also kick itself.
             //console.log ("debug ... fn_onWsClose code: " + p_code + " of key " + v_loginTempKey);
-            if ((this.hasOwnProperty('m__terminated') == false) || (this.m__terminated == false)) {
+            if (((this.hasOwnProperty('m__terminated') == false) || (this.m__terminated == false)) && p_ws.m_loginRequest != null) {
                 c_ChatAccountRooms.fn_del_member_fromAccountByName(p_ws.m_loginRequest, true);
             }
 
