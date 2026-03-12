@@ -1037,6 +1037,11 @@ function fn_startChatServer() {
         });
     });
 
+    // Log raw WS upgrade attempts before the ws library handles them
+    wserver.on('upgrade', (req, socket, head) => {
+        console.log(`[http upgrade] path=${req.url} from=${socket.remoteAddress} ua=${req.headers['user-agent']||'-'}`);
+    });
+
     // Start HTTP server
     wserver.listen(
         global.m_serverconfig.m_configuration.server_port,
