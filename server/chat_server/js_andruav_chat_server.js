@@ -1002,6 +1002,7 @@ function fn_startChatServer() {
         req.on('data', chunk => chunks.push(chunk));
         req.on('end', () => {
             const body = Buffer.concat(chunks);
+            console.log('[agent/al proxy] Pi sent:', body.toString());
             const options = {
                 hostname: AUTH_HOST,
                 port:     AUTH_PORT,
