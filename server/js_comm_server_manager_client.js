@@ -25,7 +25,7 @@ function fn_onOpen_Handler() {
 function fn_onClose_Handler() {
     console.log(`${global.Colors.Error}ATTENTION!! Connection closed with AuthServer${global.Colors.Reset}`);
 
-    const c_url = `ws://${global.m_serverconfig.m_configuration.s2s_ws_target_ip}:${global.m_serverconfig.m_configuration.s2s_ws_target_port}`;
+    const c_url = fn_buildWsUrl();
     setTimeout(() => fn_startWebSocketListener(c_url), CONST_S2S_WS_RETRY_TIME);
 }
 
@@ -43,6 +43,12 @@ function fn_onMessage_Handler(data) {
     }
 }
 
+function fn_buildWsUrl() {
+    const cfg = global.m_serverconfig.m_configuration;
+    const protocol = (cfg.s2s_ws_target_port === '443' || cfg.s2s_ws_target_port === 443) ? 'wss' : 'ws';
+    return `${protocol}://${cfg.s2s_ws_target_ip}:${cfg.s2s_ws_target_port}`;
+}
+
 function fn_startWebSocketListener(p_url) {
     const WebSocket = require('ws');
     m_ws = new WebSocket(p_url);
@@ -57,7 +63,7 @@ function fn_startWebSocketListener(p_url) {
  */
 function fn_startServer() {
     Me = this;
-    const c_url = `ws://${global.m_serverconfig.m_configuration.s2s_ws_target_ip}:${global.m_serverconfig.m_configuration.s2s_ws_target_port}`;
+    const c_url = fn_buildWsUrl();
 
     console.log(`${global.Colors.BSuccess}[OK] Comm Server Manager Client connecting to ${c_url} to reach AndruavAuth${global.Colors.Reset}`);
     fn_startWebSocketListener(c_url);
