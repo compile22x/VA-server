@@ -4,6 +4,7 @@ primary_region = "iad"
 [build]
   dockerfile = "Dockerfile"
 
+# WebSocket server for drones and GCS (FA-Vertair connects here)
 [[services]]
   protocol = "tcp"
   internal_port = 8080
