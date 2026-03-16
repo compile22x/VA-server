@@ -5,20 +5,74 @@ primary_region = "iad"
   dockerfile = "Dockerfile"
 
 # WebSocket server for drones and GCS (FA-Vertair connects here)
-[[services]]
-  protocol = "tcp"
-  internal_port = 8080
+# Using http_service for proper WebSocket upgrade support with Fly TLS termination
+[http_service]
+  internal_port = 9966
+  force_https = true
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
-  
+
+# UDP services for MAVLink proxy (Mission Planner telemetry)
+[[services]]
+  protocol = "udp"
+  internal_port = 14550
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
   [[services.ports]]
-    port = 80
-    handlers = ["http"]
-  
+    port = 14550
+
+[[services]]
+  protocol = "udp"
+  internal_port = 14551
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
   [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
+    port = 14551
+
+[[services]]
+  protocol = "udp"
+  internal_port = 14552
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 14552
+
+[[services]]
+  protocol = "udp"
+  internal_port = 14553
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 14553
+
+[[services]]
+  protocol = "udp"
+  internal_port = 14554
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 14554
+
+[[services]]
+  protocol = "udp"
+  internal_port = 14555
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 14555
 
 [vm]
   memory = "256mb"

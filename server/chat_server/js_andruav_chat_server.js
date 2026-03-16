@@ -988,10 +988,25 @@ function fn_startChatServer() {
     const v_express = require('express');
     const v_WebSocketServer = require('ws').Server;
     const c_http = require('http');
+    const c_https = require('https');
+    const c_fs = require('fs');
+    const c_path = require('path');
 
-    // Create HTTP server with Express
+    // Create HTTP/HTTPS server with Express
     const app = new v_express();
-    const wserver = c_http.createServer(app);
+    let wserver;
+
+    if (global.m_serverconfig.m_configuration.enable_SSL === true
+        && global.m_serverconfig.m_configuration.ssl_key_file
+        && global.m_serverconfig.m_configuration.ssl_cert_file) {
+        const options = {
+            key: c_fs.readFileSync(c_path.join(__dirname, "../..", global.m_serverconfig.m_configuration.ssl_key_file)),
+            cert: c_fs.readFileSync(c_path.join(__dirname, "../..", global.m_serverconfig.m_configuration.ssl_cert_file))
+        };
+        wserver = c_https.createServer(options, app);
+    } else {
+        wserver = c_http.createServer(app);
+    }
 
     // Proxy /agent/al/ (drone-agent auth) to the auth server.
     // The Pi cannot reach the Railway-internal auth hostname directly,
