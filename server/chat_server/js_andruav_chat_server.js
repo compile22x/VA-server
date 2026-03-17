@@ -147,7 +147,7 @@ function send_message_toTarget(message, isbinary, target, ws, onNotFound) {
             }
         } catch (e) {
             // If parsing fails, forward original message
-            console.log("[MSG] Parse error for origin tracking: " + e.message);
+            vlog.warn("[MSG] Parse error for origin tracking: " + e.message);
         }
 
         if (global.m_serverconfig.m_configuration.enable_super_server === true)
@@ -919,7 +919,7 @@ function send_message_toTarget(message, isbinary, target, ws, onNotFound) {
 
 
         function fn_onWsError(p_err) {
-            console.log("debug ... fn_onWsError err: " + p_err);
+            vlog.error("fn_onWsError: " + p_err);
             if (global.m_logger) global.m_logger.Error('Party WS Error', 'fn_onWsError', null, p_err);
         }
 
@@ -1024,12 +1024,19 @@ function fn_startChatServer() {
                 proxy_res.on('data', c => body_chunks.push(c));
                 proxy_res.on('end', () => {
                     const body_buf = Buffer.concat(body_chunks);
-                    console.log('[agent/al proxy] auth response:', body_buf.toString());
+                    try {
+                        const parsed = JSON.parse(body_buf.toString());
+                        if (parsed.sid) parsed.sid = vlog.redact(parsed.sid);
+                        if (parsed.cs && parsed.cs.f) parsed.cs.f = vlog.redact(parsed.cs.f);
+                        vlog.verbose('[agent/al proxy] auth response: ' + JSON.stringify(parsed));
+                    } catch (_) {
+                        vlog.verbose('[agent/al proxy] auth response: ' + body_buf.toString());
+                    }
                     res.end(body_buf);
                 });
             });
             proxy_req.on('error', err => {
-                console.error('[agent/al proxy] auth server error:', err.message);
+                vlog.error('[agent/al proxy] auth server error: ' + err.message);
                 res.statusCode = 502;
                 res.end(JSON.stringify({ e: -1, em: 'auth server unreachable' }));
             });
@@ -1040,7 +1047,7 @@ function fn_startChatServer() {
 
     // Log raw WS upgrade attempts before the ws library handles them
     wserver.on('upgrade', (req, socket, head) => {
-        console.log(`[http upgrade] path=${req.url} from=${socket.remoteAddress} ua=${req.headers['user-agent']||'-'}`);
+        vlog.verbose(`[http upgrade] path=${req.url} from=${socket.remoteAddress} ua=${req.headers['user-agent']||'-'}`);
     });
 
     // Start HTTP server
@@ -1086,10 +1093,13 @@ function fn_startChatServer() {
             ws.once('message', (data) => {
                 try {
                     const msg = JSON.parse(data.toString());
-                    console.log('[/al ws] auth message from Pi:', JSON.stringify(msg));
+                    const redacted = Object.assign({}, msg);
+                    const keyField = 'f' in redacted ? 'f' : 'sid' in redacted ? 'sid' : 'key' in redacted ? 'key' : null;
+                    if (keyField) redacted[keyField] = vlog.redact(redacted[keyField]);
+                    vlog.verbose('[/al ws] auth message from Pi: ' + JSON.stringify(redacted));
                     const tempKey = msg['f'] || msg['sid'] || msg['key'];
                     if (!tempKey) {
-                        console.warn('[/al ws] no key in first message — closing');
+                        vlog.warn('[/al ws] no key in first message — closing');
                         ws.close();
                         return;
                     }
@@ -1098,7 +1108,7 @@ function fn_startChatServer() {
                     const fake_params = { 's': msg['s'] || msg['sd'] || '', 'at': msg['at'] || 'd' };
                     acceptConnection(tempKey, fake_params, ws);
                 } catch(e) {
-                    console.error('[/al ws] parse error:', e.message, 'raw:', data.toString());
+                    vlog.error('[/al ws] parse error: ' + e.message);
                     ws.close();
                 }
             });
@@ -1109,7 +1119,7 @@ function fn_startChatServer() {
 
     // Error handling for WebSocket server
     v_wss.on('error', (error) => {
-        console.error('WebSocket server error:', error);
+        vlog.error('WebSocket server error: ' + error);
     });
 
     // Return the WebSocket server instance (optional, for further use)
