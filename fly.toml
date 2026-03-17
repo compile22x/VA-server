@@ -4,7 +4,8 @@ primary_region = "iad"
 [build]
   dockerfile = "Dockerfile"
 
-# WebSocket server — http_service handles TLS + HTTP upgrade correctly for WSS clients
+# Fly terminates TLS on 443, upgrades HTTP, forwards to internal 8080
+# This is required for the drone C++ WSS client to complete the WS handshake
 [http_service]
   internal_port = 8080
   force_https = false
