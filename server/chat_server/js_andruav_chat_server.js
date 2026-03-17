@@ -532,6 +532,16 @@ function send_message_toTarget(message, isbinary, target, ws, onNotFound) {
                             v_jmsg.ms.socket2.port = 0;
                         }
 
+                        // Apply server-side fixed ports so both sockets land on known, externally-exposed ports.
+                        // udp_drone_port: socket1 — drone streams MAVLink telemetry here
+                        // udp_gcs_port:   socket2 — GCS (Mission Planner) connects here
+                        if (global.m_serverconfig.m_configuration.udp_drone_port) {
+                            v_jmsg.ms.socket1.port = global.m_serverconfig.m_configuration.udp_drone_port;
+                        }
+                        if (global.m_serverconfig.m_configuration.udp_gcs_port) {
+                            v_jmsg.ms.socket2.port = global.m_serverconfig.m_configuration.udp_gcs_port;
+                        }
+
                         vlog.info('[UDP] UdpProxy open request from drone=' + p_ws.name + ' s1=' + v_jmsg.ms.socket1.port + ' s2=' + v_jmsg.ms.socket2.port);
 
                         udp.getUDPSocket(p_ws.name, v_jmsg.ms.socket1, v_jmsg.ms.socket2, function (ms) {
