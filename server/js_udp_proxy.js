@@ -14,12 +14,24 @@ const os = require('os');
 
 let flyBindAddress = "0.0.0.0";
 
-dns.lookup('fly-global-services', (err, address) => {
-    if (!err && address) {
-        flyBindAddress = address;
-        console.log('Fly.io UDP bind address: ' + address);
-    }
-});
+function resolveFlyGlobalServices(attempt) {
+    attempt = attempt || 1;
+    dns.lookup('fly-global-services', { family: 4 }, (err, address) => {
+        if (!err && address) {
+            flyBindAddress = address;
+            console.log('Fly.io UDP bind address resolved to: ' + address + ' (attempt ' + attempt + ')');
+        } else {
+            if (attempt === 1) {
+                console.log('fly-global-services not found on attempt 1, retrying in 3s...');
+                setTimeout(() => resolveFlyGlobalServices(2), 3000);
+            } else {
+                console.warn('fly-global-services failed to resolve after ' + attempt + ' attempts. UDP will bind to 0.0.0.0 — external UDP may not work on Fly.io. Error: ' + (err && err.message));
+            }
+        }
+    });
+}
+
+resolveFlyGlobalServices();
 
 const PROXY_IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 const REAPER_INTERVAL_MS = 60 * 1000; // Check every 1 minute
@@ -332,9 +344,15 @@ function getUDPSocket(name, socket1, socket2, callback) {
         };
         m_activeUdpProxy[name] = obj;
 
+        console.log('[UDP] Creating proxy for ' + name + ' binding to ' + flyBindAddress + ' s1=' + socket1.port + ' s2=' + socket2.port);
         obj.m_udpproxy = new udp_proxy(flyBindAddress, socket1.port, flyBindAddress, socket2.port, (enabled) => {
             const ms = obj.m_udpproxy.getConfig();
             ms.en = enabled;
+            if (enabled) {
+                console.log('[UDP] Proxy ready for ' + name + ' — drone=' + ms.socket1.address + ':' + ms.socket1.port + ' gcs=' + ms.socket2.address + ':' + ms.socket2.port);
+            } else {
+                console.error('[UDP] Proxy bind FAILED for ' + name + ' — check fly-global-services resolution and port availability');
+            }
             startReaper();
             callback(ms);
         });
