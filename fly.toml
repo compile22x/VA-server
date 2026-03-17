@@ -16,7 +16,7 @@ primary_region = "iad"
     port = 443
     handlers = ["tls"]
 
-# UDP proxy GCS side — Mission Planner (UDPCI) connects here
+# UDP proxy drone side — drone streams MAVLink telemetry here
 [[services]]
   protocol = "udp"
   internal_port = 15412
@@ -27,7 +27,7 @@ primary_region = "iad"
   [[services.ports]]
     port = 15412
 
-# UDP proxy drone side — drone streams MAVLink telemetry here
+# UDP proxy GCS side — Mission Planner (UDPCI) connects here
 [[services]]
   protocol = "udp"
   internal_port = 15411
