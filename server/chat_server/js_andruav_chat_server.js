@@ -532,6 +532,12 @@ function send_message_toTarget(message, isbinary, target, ws, onNotFound) {
                             v_jmsg.ms.socket2.port = 0;
                         }
 
+                        // If drone left socket1 (telemetry inbound) unspecified, use the server's fixed drone port so
+                        // it lands on a known, externally-exposed port (configured via udp_drone_port in server.config).
+                        if (v_jmsg.ms.socket1.port === 0 && global.m_serverconfig.m_configuration.udp_drone_port) {
+                            v_jmsg.ms.socket1.port = global.m_serverconfig.m_configuration.udp_drone_port;
+                        }
+
                         vlog.info('[UDP] UdpProxy open request from drone=' + p_ws.name + ' s1=' + v_jmsg.ms.socket1.port + ' s2=' + v_jmsg.ms.socket2.port);
 
                         udp.getUDPSocket(p_ws.name, v_jmsg.ms.socket1, v_jmsg.ms.socket2, function (ms) {
